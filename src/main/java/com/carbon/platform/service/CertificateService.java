@@ -36,13 +36,16 @@ public class CertificateService {
         String qrCodeUrl = "http://localhost:8080/api/v1/public/certificates/" + certificateId;
 
         byte[] pdfBytes = null;
+        java.time.LocalDateTime issuedAt = java.time.LocalDateTime.now();
         try {
             pdfBytes = PdfGenerationUtil.generateCertificatePdf(
                     companyName,
                     certificateId,
                     offsetValue,
                     secureHash,
-                    qrCodeUrl
+                    qrCodeUrl,
+                    issuedAt,
+                    transaction.getCompany().getCompanyName()
             );
         } catch (Exception e) {
             System.err.println("Failed to generate PDF for certificate: " + e.getMessage());
@@ -54,6 +57,7 @@ public class CertificateService {
         certificate.setCo2OffsetValue(offsetValue);
         certificate.setSecureHash(secureHash);
         certificate.setPdfData(pdfBytes);
+        certificate.setIssuedAt(issuedAt);
 
         Certificate saved = certificateRepository.save(certificate);
 
