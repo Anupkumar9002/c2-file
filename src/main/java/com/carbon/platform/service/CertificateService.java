@@ -10,7 +10,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
+import java.nio.file.*;
 import java.util.List;
 import java.util.UUID;
 
@@ -59,12 +59,59 @@ public class CertificateService {
         certificate.setPdfData(pdfBytes);
         certificate.setIssuedAt(issuedAt);
 
+        // Save PDF to file system for later retrieval
+        savePdfToFile(certificateId, pdfBytes);
+
         Certificate saved = certificateRepository.save(certificate);
 
         // Publish event to trigger notification
         eventPublisher.publishEvent(new CertificateIssuedEvent(transaction.getCompany().getUser().getId(), certificateId, offsetValue));
 
         return saved;
+    }
+
+    public Certificate generatePdfIfMissing(String certificateId) {
+        Certificate cert = getCertificateByCode(certificateId);
+        if (cert.getPdfData() != null && cert.getPdfData().length > 0) {
+            return cert; // PDF already exists
+        }
+        // Gather data needed for PDF generation
+        String companyName = cert.getTransaction().getCompany().getCompanyName();
+        Double offsetValue = cert.getCo2OffsetValue();
+        String secureHash = cert.getSecureHash();
+        String qrCodeUrl = "http://localhost:8080/api/v1/public/certificates/" + certificateId + "/pdf";
+        java.time.LocalDateTime issuedAt = java.time.LocalDateTime.now();
+        // Placeholder / default values for new fields
+        String recipientName = companyName; // using company name as recipient
+        String offsetMethod = "Renewable Energy";
+        String projectLocation = "Pune, India";
+        String verificationStandard = "Gold Standard";
+        String transactionHash = cert.getTransaction().getTransactionId();
+        String issuerName = "Carbon Platform";
+        byte[] pdfBytes = null;
+        try {
+            pdfBytes = PdfGenerationUtil.generateCertificatePdf(
+                    companyName,
+                    certificateId,
+                    offsetValue,
+                    secureHash,
+                    qrCodeUrl,
+                    issuedAt,
+                    recipientName,
+                    offsetMethod,
+                    projectLocation,
+                    verificationStandard,
+                    transactionHash,
+                    issuerName);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate PDF: " + e.getMessage(), e);
+        }
+        // Save PDF data to entity and file system
+        cert.setPdfData(pdfBytes);
+        cert.setIssuedAt(issuedAt);
+        certificateRepository.save(cert);
+        savePdfToFile(certificateId, pdfBytes);
+        return cert;
     }
 
     public Certificate getCertificateByCode(String code) {
@@ -76,7 +123,19 @@ public class CertificateService {
         return certificateRepository.findByTransactionCompanyUserEmail(companyEmail);
     }
 
-    private String generateSecureHash(String certId, String txId, String companyName, Double offsetValue) {
+    // Helper method to save PDF bytes to a file under "certificates" directory
+    private void savePdfToFile(String certificateId, byte[] pdfBytes) {
+        try {
+            // Determine base directory (project root)
+            java.nio.file.Path baseDir = java.nio.file.Paths.get(System.getProperty("user.dir"), "certificates");
+            java.nio.file.Files.createDirectories(baseDir);
+            java.nio.file.Path filePath = baseDir.resolve("certificate-" + certificateId + ".pdf");
+            java.nio.file.Files.write(filePath, pdfBytes);
+        } catch (Exception e) {
+            System.err.println("Failed to save certificate PDF to file system: " + e.getMessage());
+        }
+    }
+
         try {
             String data = certId + "|" + txId + "|" + companyName + "|" + offsetValue;
             MessageDigest digest = MessageDigest.getInstance("SHA-256");

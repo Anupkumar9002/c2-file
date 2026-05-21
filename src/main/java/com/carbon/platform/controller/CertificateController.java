@@ -22,8 +22,15 @@ public class CertificateController {
         this.certificateService = certificateService;
     }
 
-    @GetMapping("/{certificateId}/pdf")
-    public ResponseEntity<?> downloadCertificatePdf(@PathVariable String certificateId) {
+    @PostMapping("/{certificateId}/generate")
+    public ResponseEntity<?> generatePdfIfMissing(@PathVariable String certificateId) {
+        try {
+            Certificate cert = certificateService.generatePdfIfMissing(certificateId);
+            return ResponseEntity.ok().body("PDF generated and saved.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error generating PDF: " + e.getMessage());
+        }
+    }
         Certificate cert = certificateService.getCertificateByCode(certificateId);
         byte[] pdf = cert.getPdfData();
         if (pdf == null || pdf.length == 0) {
@@ -31,7 +38,8 @@ public class CertificateController {
         }
         ByteArrayResource resource = new ByteArrayResource(pdf);
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=certificate-" + certificateId + ".pdf");
+        // Serve the PDF inline so the browser displays it directly
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=certificate-" + certificateId + ".pdf");
         return ResponseEntity.ok()
                 .headers(headers)
                 .contentLength(pdf.length)
