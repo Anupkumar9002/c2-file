@@ -1,0 +1,356 @@
+<div class="dashboard-wrapper">
+  <!-- Top Navigation Bar -->
+  <header class="glass-panel top-nav">
+    <div class="logo-area">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l-.707-.707M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span class="nav-title">AeroCarbon Company Portal</span>
+    </div>
+    
+    <div class="user-profile">
+      <span class="badge badge-info">{{ apiService.currentUser()?.role }}</span>
+      <span class="user-name">{{ apiService.currentUser()?.name }}</span>
+      <button class="btn btn-secondary btn-sm" (click)="logout()">Sign Out</button>
+    </div>
+  </header>
+
+  <!-- Content Grid -->
+  <div class="main-layout">
+    <!-- Sidebar navigation -->
+    <aside class="glass-panel sidebar">
+      <nav class="nav-menu">
+        <button class="nav-link" [class.active]="activeTab() === 'dashboard'" (click)="activeTab.set('dashboard')">
+          <span class="icon">📊</span> Dashboard
+        </button>
+        <button class="nav-link" [class.active]="activeTab() === 'marketplace'" (click)="activeTab.set('marketplace')">
+          <span class="icon">🛍️</span> Marketplace
+        </button>
+        <button class="nav-link" [class.active]="activeTab() === 'cart'" (click)="activeTab.set('cart')">
+          <span class="icon">🛒</span> Cart ({{ cart().length }})
+        </button>
+        <button class="nav-link" [class.active]="activeTab() === 'purchases'" (click)="activeTab.set('purchases')">
+          <span class="icon">📜</span> Purchase History
+        </button>
+        <button class="nav-link" [class.active]="activeTab() === 'certificates'" (click)="activeTab.set('certificates')">
+          <span class="icon">🏅</span> Certificates
+        </button>
+      </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="content-area">
+      <!-- 1. DASHBOARD VIEW -->
+      @if (activeTab() === 'dashboard') {
+        <div>
+          <h2 class="view-title">Corporate Carbon Portfolio</h2>
+          <p class="view-subtitle">Monitor offsets, active purchases, and download official certificates.</p>
+
+          <!-- KPIs Grid -->
+          <div class="kpi-grid">
+            <div class="glass-panel kpi-card green-glow">
+              <span class="kpi-icon">🌍</span>
+              <div class="kpi-details">
+                <span class="kpi-value">{{ kpis()?.totalOffsetsPurchased || 0 }} t</span>
+                <span class="kpi-label">Total CO2 Retired (Tonnes)</span>
+              </div>
+            </div>
+
+            <div class="glass-panel kpi-card blue-glow">
+              <span class="kpi-icon">💸</span>
+              <div class="kpi-details">
+                <span class="kpi-value">₹{{ kpis()?.totalSpend || 0 }}</span>
+                <span class="kpi-label">Total Investment</span>
+              </div>
+            </div>
+
+            <div class="glass-panel kpi-card purple-glow">
+              <span class="kpi-icon">🏅</span>
+              <div class="kpi-details">
+                <span class="kpi-value">{{ certificates().length }}</span>
+                <span class="kpi-label">Certificates Issued</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Purchases -->
+          <div class="section-container">
+            <h3 class="section-title">Recent Portfolio Additions</h3>
+            <div class="table-container">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Credits Purchased</th>
+                    <th>Subtotal (Net)</th>
+                    <th>Fee (2.5%)</th>
+                    <th>Total Spend</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (txn of purchases().slice(0, 5); track txn.id) {
+                    <tr>
+                      <td>{{ txn.timestamp ? txn.timestamp.substring(0, 10) : '-' }}</td>
+                      <td>{{ txn.creditsRetired }} credits</td>
+                      <td>₹{{ txn.netAmount }}</td>
+                      <td>₹{{ txn.feeAmount }}</td>
+                      <td>₹{{ txn.totalAmount }}</td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">No carbon offsets purchased yet.</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- 2. MARKETPLACE VIEW -->
+      @if (activeTab() === 'marketplace') {
+        <div>
+          <h2 class="view-title">Active Carbon Credit Listings</h2>
+          <p class="view-subtitle">Browse, filter, and buy certified ecological offsets.</p>
+
+          <!-- Filters Form -->
+          <div class="glass-panel filter-panel">
+            <div class="filter-grid">
+              <div class="form-group mb-0">
+                <label class="form-label">Practice Type</label>
+                <select name="practiceType" class="form-control select-control" [(ngModel)]="filters.practiceType" (change)="applyFilters()">
+                  <option value="">All Practices</option>
+                  <option value="TREE_PLANTATION">Tree Plantation</option>
+                  <option value="ORGANIC_FARMING">Organic Farming</option>
+                  <option value="SOLAR">Solar Energy Setup</option>
+                  <option value="WATER_CONSERVATION">Water Conservation</option>
+                  <option value="SOIL_MANAGEMENT">Soil Management</option>
+                </select>
+              </div>
+
+              <div class="form-group mb-0">
+                <label class="form-label">Location</label>
+                <input type="text" name="location" class="form-control" placeholder="e.g. Punjab" [(ngModel)]="filters.location" (input)="applyFilters()">
+              </div>
+
+              <div class="form-group mb-0">
+                <label class="form-label">Min Price (₹)</label>
+                <input type="number" name="minPrice" class="form-control" placeholder="₹ Min" [(ngModel)]="filters.minPrice" (input)="applyFilters()">
+              </div>
+
+              <div class="form-group mb-0">
+                <label class="form-label">Max Price (₹)</label>
+                <input type="number" name="maxPrice" class="form-control" placeholder="₹ Max" [(ngModel)]="filters.maxPrice" (input)="applyFilters()">
+              </div>
+            </div>
+
+            <div class="filter-actions">
+              <button class="btn btn-secondary btn-sm" (click)="clearFilters()">Clear Filters</button>
+            </div>
+          </div>
+
+          <!-- Listings Grid -->
+          <div class="listings-grid">
+            @for (listing of listings(); track listing.id) {
+              <div class="glass-panel listing-card">
+                <div class="listing-header">
+                  <div>
+                    <h3 class="listing-title">{{ listing.practiceType }}</h3>
+                    <span class="listing-location">📍 {{ listing.location }}</span>
+                  </div>
+                  <button class="fav-btn" (click)="toggleFavourite(listing.id)" [class.active]="isFavourite(listing.id)">
+                    ★
+                  </button>
+                </div>
+
+                <div class="listing-details">
+                  <div class="detail-row">
+                    <span class="label">Quantity Available:</span>
+                    <span class="val">{{ listing.creditsAvailable }} credits</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="label">Price Per Credit:</span>
+                    <span class="val font-semibold text-emerald-400">₹{{ listing.pricePerCredit }}</span>
+                  </div>
+                  <div class="detail-row total-calc">
+                    <span class="label">Farmer Owner:</span>
+                    <span class="val">{{ listing.farmerName }}</span>
+                  </div>
+                </div>
+
+                <div class="listing-actions">
+                  <button class="btn btn-secondary btn-sm" (click)="addToCart(listing.id)">Add to Cart</button>
+                  <button class="btn btn-primary btn-sm" (click)="purchaseListing(listing.id)">Buy Now</button>
+                </div>
+              </div>
+            } @empty {
+              <div class="glass-panel empty-state" style="grid-column: 1 / -1;">
+                <span class="empty-icon">🍃</span>
+                <h4>No Carbon Listings Available</h4>
+                <p>There are no active credits listed matching your filter settings at this time.</p>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- 3. SHOPPING CART VIEW -->
+      @if (activeTab() === 'cart') {
+        <div>
+          <h2 class="view-title">My Cart</h2>
+          <p class="view-subtitle">Review items and checkout offsets.</p>
+
+          <div class="cart-layout">
+            <div class="cart-items">
+              @for (item of cart(); track item.id) {
+                <div class="glass-panel cart-item-card">
+                  <div class="cart-item-info">
+                    <h4>{{ item.practiceType }} Offset</h4>
+                    <p class="meta">📍 {{ item.location }} | Owned by {{ item.farmerName }}</p>
+                  </div>
+                  
+                  <div class="cart-item-price">
+                    <div class="detail">
+                      <span class="lbl">Credits:</span>
+                      <span class="val">{{ item.creditsAvailable }}</span>
+                    </div>
+                    <div class="detail">
+                      <span class="lbl">Price/Credit:</span>
+                      <span class="val">₹{{ item.pricePerCredit }}</span>
+                    </div>
+                  </div>
+
+                  <div class="cart-item-actions">
+                    <button class="btn btn-danger btn-sm" (click)="removeFromCart(item.id)">Remove</button>
+                  </div>
+                </div>
+              } @empty {
+                <div class="glass-panel empty-state">
+                  <span class="empty-icon">🛒</span>
+                  <h4>Your Cart is Empty</h4>
+                  <p>Visit the marketplace to select and purchase carbon credits.</p>
+                  <button class="btn btn-primary mt-4" (click)="activeTab.set('marketplace')">Browse Marketplace</button>
+                </div>
+              }
+            </div>
+
+            <!-- Cart Summary Panel -->
+            @if (cart().length > 0) {
+              <div class="glass-panel summary-panel">
+                <h3>Order Summary</h3>
+                <div class="summary-details">
+                  @for (item of cart(); track item.id) {
+                    <div class="summary-row font-sm text-secondary">
+                      <span>{{ item.practiceType }} ({{ item.creditsAvailable }} credits)</span>
+                      <span>₹{{ item.creditsAvailable * item.pricePerCredit }}</span>
+                    </div>
+                  }
+                  <div class="summary-divider"></div>
+                  
+                  <div class="summary-row">
+                    <span class="text-secondary">Subtotal (Net)</span>
+                    <span class="text-secondary">₹{{ kpis()?.cartSubtotal || 0 }}</span>
+                  </div>
+                  <div class="summary-row">
+                    <span class="text-secondary">Platform Fee (2.5%)</span>
+                    <span class="text-secondary">₹{{ kpis()?.cartFee || 0 }}</span>
+                  </div>
+                  <div class="summary-divider"></div>
+                  
+                  <div class="summary-row total-row">
+                    <span>Grand Total</span>
+                    <span>₹{{ kpis()?.cartTotal || 0 }}</span>
+                  </div>
+                </div>
+
+                <button class="btn btn-primary w-full" (click)="checkoutCart()" [disabled]="isLoading()">
+                  {{ isLoading() ? 'Processing Checkout...' : 'Purchase & Retire Offsets' }}
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- 4. PURCHASES VIEW -->
+      @if (activeTab() === 'purchases') {
+        <div>
+          <h2 class="view-title">Transaction Purchase History</h2>
+          <p class="view-subtitle">Detailed audit records of your carbon investments.</p>
+
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Transaction ID</th>
+                  <th>Date & Time</th>
+                  <th>Practice Type</th>
+                  <th>Credits Retired</th>
+                  <th>Subtotal</th>
+                  <th>Platform Fee (2.5%)</th>
+                  <th>Total Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (txn of purchases(); track txn.id) {
+                  <tr>
+                    <td>TXN-{{ txn.id }}</td>
+                    <td>{{ txn.timestamp ? txn.timestamp.replace('T', ' ').substring(0, 19) : '-' }}</td>
+                    <td>{{ txn.listing?.practiceType }}</td>
+                    <td>{{ txn.creditsRetired }} t</td>
+                    <td>₹{{ txn.netAmount }}</td>
+                    <td>₹{{ txn.feeAmount }}</td>
+                    <td>₹{{ txn.totalAmount }}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px;">No purchase records found.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- 5. CERTIFICATES VIEW -->
+      @if (activeTab() === 'certificates') {
+        <div>
+          <h2 class="view-title">Issued Green Certificates</h2>
+          <p class="view-subtitle">Official carbon retirement credentials for environmental auditing audits.</p>
+
+          <div class="certificates-grid">
+            @for (cert of certificates(); track cert.id) {
+              <div class="glass-panel certificate-card">
+                <div class="cert-watermark">✓</div>
+                <div class="cert-header">
+                  <span class="cert-lbl">Official Carbon Offset Certificate</span>
+                  <span class="cert-id">ID: {{ cert.certificateNumber }}</span>
+                </div>
+                
+                <div class="cert-body">
+                  <h2>{{ cert.company?.companyName }}</h2>
+                  <p class="cert-text">is hereby recognized for successfully offsetting</p>
+                  <p class="cert-amount">{{ cert.creditsOffset }} Tonnes of CO₂</p>
+                  <p class="cert-practice">via <strong>{{ cert.practiceType }}</strong> practices.</p>
+                </div>
+
+                <div class="cert-footer">
+                  <span class="cert-date">Date: {{ cert.issuedAt ? cert.issuedAt.substring(0,10) : '-' }}</span>
+                  <button class="btn btn-primary btn-sm" (click)="downloadPdf(cert.id)">Download PDF</button>
+                </div>
+              </div>
+            } @empty {
+              <div class="glass-panel empty-state" style="grid-column: 1 / -1;">
+                <span class="empty-icon">🏅</span>
+                <h4>No Certificates Issued</h4>
+                <p>Purchase carbon credits from the marketplace to receive verified ecological certificates.</p>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </main>
+  </div>
+</div>

@@ -1,0 +1,275 @@
+<div class="auth-wrapper">
+  <!-- Brand Section (Left Panel) -->
+  <div class="brand-panel">
+    <div class="brand-header">
+      <div class="brand-logo">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l-.707-.707M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <span class="brand-name">AeroCarbon</span>
+    </div>
+    
+    <div class="brand-body">
+      <h1 class="brand-title">Empowering Green Agriculture</h1>
+      <p class="brand-subtitle">Connect with a global network to verify, list, and trade ecological carbon credits. Secure, atomic, and verified.</p>
+      
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-icon">🌱</div>
+          <div>
+            <h4>Farmer Integration</h4>
+            <p>Log practice logs, verify carbon capture, and withdraw payouts directly.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">⚖️</div>
+          <div>
+            <h4>Dynamic Multipliers</h4>
+            <p>Calculations verified by verified credit formula engines.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🛡️</div>
+          <div>
+            <h4>Audit Auditing</h4>
+            <p>Traceable transactions and verifiable PDF certificates with secure verification QR codes.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Section (Right Panel) -->
+  <div class="form-panel">
+    <!-- Login View -->
+    @if (viewMode() === 'login') {
+      <div class="glass-panel auth-card">
+        <h2 class="card-title">Sign In</h2>
+        <p class="card-subtitle">Access your Agro-Carbon marketplace account</p>
+
+        <form (ngSubmit)="onLogin()" #loginForm="ngForm">
+          <div class="form-group">
+            <label class="form-label" for="login-username">Email or Mobile</label>
+            <input type="text" id="login-username" name="username" class="form-control" placeholder="enter email or phone" [(ngModel)]="loginData.username" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="login-password">Password</label>
+            <input type="password" id="login-password" name="password" class="form-control" placeholder="••••••••" [(ngModel)]="loginData.password" required>
+          </div>
+
+          <div class="form-footer">
+            <button type="button" class="link-btn" (click)="toggleMode('forgot-password')">Forgot Password?</button>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-full" [disabled]="loginForm.invalid || isLoading()">
+            {{ isLoading() ? 'Signing in...' : 'Sign In' }}
+          </button>
+        </form>
+
+        <div class="divider"><span>New to AeroCarbon?</span></div>
+
+        <div class="register-choices">
+          <button type="button" class="btn btn-secondary w-full" (click)="toggleMode('register-farmer')">
+            Join as Farmer
+          </button>
+          <button type="button" class="btn btn-secondary w-full" (click)="toggleMode('register-company')">
+            Join as Company
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Farmer Registration View -->
+    @if (viewMode() === 'register-farmer') {
+      <div class="glass-panel auth-card">
+        <h2 class="card-title">Farmer Onboarding</h2>
+        <p class="card-subtitle">Register to log practices and earn rewards</p>
+
+        <form (ngSubmit)="onRegisterFarmer()" #farmerForm="ngForm">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input type="text" name="name" class="form-control" placeholder="John Doe" [(ngModel)]="farmerRegisterData.name" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <input type="email" name="email" class="form-control" placeholder="john@example.com" [(ngModel)]="farmerRegisterData.email" required>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Mobile Number</label>
+              <input type="text" name="mobile" class="form-control" placeholder="9876543210" [(ngModel)]="farmerRegisterData.mobile" required pattern="^[6-9]\d{9}$">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Aadhaar Number</label>
+              <input type="text" name="aadhaar" class="form-control" placeholder="12-digit Aadhaar" [(ngModel)]="farmerRegisterData.aadhaarNumber" required pattern="^\d{12}$">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Farm/Village Address</label>
+            <input type="text" name="address" class="form-control" placeholder="123 Agro Farm, Punjab" [(ngModel)]="farmerRegisterData.address" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" placeholder="••••••••" [(ngModel)]="farmerRegisterData.password" required minlength="6">
+          </div>
+
+          <button type="submit" class="btn btn-primary w-full" [disabled]="farmerForm.invalid || isLoading()">
+            {{ isLoading() ? 'Registering...' : 'Register' }}
+          </button>
+        </form>
+
+        <div class="card-footer-nav">
+          Already have an account? <button type="button" class="link-btn" (click)="toggleMode('login')">Sign In</button>
+        </div>
+      </div>
+    }
+
+    <!-- Company Registration View -->
+    @if (viewMode() === 'register-company') {
+      <div class="glass-panel auth-card">
+        <h2 class="card-title">Company Registration</h2>
+        <p class="card-subtitle">Onboard as an Offset Buyer</p>
+
+        <form (ngSubmit)="onRegisterCompany()" #companyForm="ngForm">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Company Name</label>
+              <input type="text" name="companyName" class="form-control" placeholder="GreenCorp LLC" [(ngModel)]="companyRegisterData.companyName" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Contact Person Name</label>
+              <input type="text" name="name" class="form-control" placeholder="Sarah Connor" [(ngModel)]="companyRegisterData.name" required>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <input type="email" name="email" class="form-control" placeholder="contact@greencorp.com" [(ngModel)]="companyRegisterData.email" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mobile Number</label>
+              <input type="text" name="mobile" class="form-control" placeholder="9777777777" [(ngModel)]="companyRegisterData.mobile" required pattern="^[6-9]\d{9}$">
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">GST Number</label>
+              <input type="text" name="gst" class="form-control" placeholder="15-character GST" [(ngModel)]="companyRegisterData.gstNumber" required minlength="15" maxlength="15">
+            </div>
+            <div class="form-group">
+              <label class="form-label">PAN Number</label>
+              <input type="text" name="pan" class="form-control" placeholder="10-character PAN" [(ngModel)]="companyRegisterData.panNumber" required minlength="10" maxlength="10">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Corporate Address</label>
+            <input type="text" name="address" class="form-control" placeholder="Tech Hub, Sector 4, Bangalore" [(ngModel)]="companyRegisterData.address" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" placeholder="••••••••" [(ngModel)]="companyRegisterData.password" required minlength="6">
+          </div>
+
+          <button type="submit" class="btn btn-primary w-full" [disabled]="companyForm.invalid || isLoading()">
+            {{ isLoading() ? 'Registering...' : 'Register' }}
+          </button>
+        </form>
+
+        <div class="card-footer-nav">
+          Already have an account? <button type="button" class="link-btn" (click)="toggleMode('login')">Sign In</button>
+        </div>
+      </div>
+    }
+
+    <!-- OTP Verification View -->
+    @if (viewMode() === 'verify-otp') {
+      <div class="glass-panel auth-card">
+        <h2 class="card-title">OTP Verification</h2>
+        <p class="card-subtitle">Verify registration for target: <strong>{{ otpData.target }}</strong></p>
+        <p class="verification-helper">Since notifications are mocked, check the Spring Boot console output logs to find the active 6-digit OTP code.</p>
+
+        <form (ngSubmit)="onVerifyOtp()" #otpForm="ngForm">
+          <div class="form-group">
+            <label class="form-label">6-Digit OTP Code</label>
+            <input type="text" name="code" class="form-control" placeholder="Enter code" [(ngModel)]="otpData.code" required pattern="^\d{6}$" maxlength="6" style="text-align: center; letter-spacing: 0.5em; font-size: 1.25rem;">
+          </div>
+
+          <button type="submit" class="btn btn-primary w-full" [disabled]="otpForm.invalid || isLoading()">
+            {{ isLoading() ? 'Verifying...' : 'Verify OTP' }}
+          </button>
+        </form>
+
+        <div class="card-footer-nav">
+          Wrong number? <button type="button" class="link-btn" (click)="toggleMode('login')">Go Back</button>
+        </div>
+      </div>
+    }
+
+    <!-- Forgot Password View -->
+    @if (viewMode() === 'forgot-password') {
+      <div class="glass-panel auth-card">
+        <h2 class="card-title">Reset Password</h2>
+        <p class="card-subtitle">Initiate OTP to reset your password</p>
+
+        <form (ngSubmit)="onForgotPassword()" #forgotForm="ngForm">
+          <div class="form-group">
+            <label class="form-label">Email or Mobile Number</label>
+            <input type="text" name="target" class="form-control" placeholder="Enter registered contact info" [(ngModel)]="forgotPasswordData.target" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-full" [disabled]="forgotForm.invalid || isLoading()">
+            {{ isLoading() ? 'Sending OTP...' : 'Send OTP' }}
+          </button>
+        </form>
+
+        <div class="card-footer-nav">
+          Remember password? <button type="button" class="link-btn" (click)="toggleMode('login')">Sign In</button>
+        </div>
+      </div>
+    }
+
+    <!-- Reset Password View -->
+    @if (viewMode() === 'reset-password') {
+      <div class="glass-panel auth-card">
+        <h2 class="card-title">Set New Password</h2>
+        <p class="card-subtitle">Enter OTP and new password details</p>
+
+        <form (ngSubmit)="onResetPassword()" #resetForm="ngForm">
+          <div class="form-group">
+            <label class="form-label">Registered Target</label>
+            <input type="text" name="target" class="form-control" [(ngModel)]="resetPasswordData.target" disabled required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">OTP Verification Code</label>
+            <input type="text" name="code" class="form-control" placeholder="Enter 6-digit code" [(ngModel)]="resetPasswordData.code" required pattern="^\d{6}$" maxlength="6">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">New Password</label>
+            <input type="password" name="newPassword" class="form-control" placeholder="Enter new password" [(ngModel)]="resetPasswordData.newPassword" required minlength="6">
+          </div>
+
+          <button type="submit" class="btn btn-primary w-full" [disabled]="resetForm.invalid || isLoading()">
+            {{ isLoading() ? 'Resetting...' : 'Reset Password' }}
+          </button>
+        </form>
+
+        <div class="card-footer-nav">
+          Cancel? <button type="button" class="link-btn" (click)="toggleMode('login')">Sign In</button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

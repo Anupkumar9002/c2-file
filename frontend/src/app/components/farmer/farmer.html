@@ -1,0 +1,595 @@
+<div class="dashboard-wrapper">
+  <!-- Top Navigation Bar -->
+  <header class="glass-panel top-nav">
+    <div class="logo-area">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l-.707-.707M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span class="nav-title">AeroCarbon Farmer Portal</span>
+    </div>
+    
+    <div class="user-profile">
+      <span class="badge badge-success">{{ apiService.currentUser()?.role }}</span>
+      <span class="user-name">{{ apiService.currentUser()?.name }}</span>
+      <button class="btn btn-secondary btn-sm" (click)="logout()">Sign Out</button>
+    </div>
+  </header>
+
+  <!-- Content Grid -->
+  <div class="main-layout">
+    <!-- Sidebar navigation -->
+    <aside class="glass-panel sidebar">
+      <nav class="nav-menu">
+        <button class="nav-link" [class.active]="activeTab() === 'dashboard'" (click)="activeTab.set('dashboard')">
+          <span class="icon">📊</span> Dashboard
+        </button>
+        <button class="nav-link" [class.active]="activeTab() === 'parcels'" (click)="activeTab.set('parcels')">
+          <span class="icon">🗺️</span> Land Parcels
+        </button>
+        <button class="nav-link" [class.active]="activeTab() === 'practice-logs'" (click)="activeTab.set('practice-logs')">
+          <span class="icon">📝</span> Practice Logs
+        </button>
+        <button class="nav-link" [class.active]="activeTab() === 'wallet'" (click)="activeTab.set('wallet')">
+          <span class="icon">💼</span> Wallet & Payouts
+        </button>
+        <button class="nav-link" [class.active]="activeTab() === 'carbon-assets'" (click)="activeTab.set('carbon-assets')">
+          <span class="icon">🌿</span> Carbon Assets
+        </button>
+      </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="content-area">
+      <!-- 1. DASHBOARD VIEW -->
+      @if (activeTab() === 'dashboard') {
+        <div>
+          <h2 class="view-title">Overview Dashboard</h2>
+          <p class="view-subtitle">Monitor your carbon production metrics, logs, and account balances.</p>
+
+          <!-- KPIs Grid -->
+          <div class="kpi-grid">
+            <div class="glass-panel kpi-card green-glow">
+              <span class="kpi-icon">🗺️</span>
+              <div class="kpi-details">
+                <span class="kpi-value">{{ kpis()?.totalAreaAcres || 0 }}</span>
+                <span class="kpi-label">Total Acres Registered</span>
+              </div>
+            </div>
+
+            <div class="glass-panel kpi-card blue-glow">
+              <span class="kpi-icon">📝</span>
+              <div class="kpi-details">
+                <span class="kpi-value">{{ kpis()?.practiceLogCount || 0 }}</span>
+                <span class="kpi-label">Logged Practices</span>
+              </div>
+            </div>
+
+            <div class="glass-panel kpi-card purple-glow">
+              <span class="kpi-icon">🛡️</span>
+              <div class="kpi-details">
+                <span class="kpi-value">{{ kpis()?.totalCreditsEarned || 0 }}</span>
+                <span class="kpi-label">CO2 Carbon Credits Earned</span>
+              </div>
+            </div>
+
+            <div class="glass-panel kpi-card gold-glow">
+              <span class="kpi-icon">💰</span>
+              <div class="kpi-details">
+                <span class="kpi-value">₹{{ wallet()?.balance || 0 }}</span>
+                <span class="kpi-label">Wallet Balance</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Logs Section -->
+          <div class="section-container">
+            <h3 class="section-title">Recent Activity</h3>
+            <div class="table-container">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Practice Type</th>
+                    <th>Crop Category</th>
+                    <th>Season</th>
+                    <th>Quantity</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (log of practiceLogs().slice(0, 5); track log.id) {
+                    <tr>
+                      <td>{{ log.practiceType }}</td>
+                      <td>{{ log.cropCategory }}</td>
+                      <td>{{ log.growingSeason }}</td>
+                      <td>{{ log.quantity }}</td>
+                      <td>
+                        <span class="badge" [class.badge-success]="log.status === 'APPROVED'" [class.badge-warning]="log.status === 'PENDING'" [class.badge-danger]="log.status === 'REJECTED'">
+                          {{ log.status }}
+                        </span>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="5" style="text-align: center; color: var(--text-muted);">No logged practices recorded yet.</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- 2. PARCELS VIEW -->
+      @if (activeTab() === 'parcels') {
+        <div>
+          <div class="header-action">
+            <div>
+              <h2 class="view-title">My Registered Lands</h2>
+              <p class="view-subtitle">Manage your verified farmland fields and acreage.</p>
+            </div>
+            <button class="btn btn-primary" (click)="openAddParcel()">+ Register Land Parcel</button>
+          </div>
+
+          <div class="parcel-list">
+            @for (parcel of parcels(); track parcel.id) {
+              <div class="glass-panel parcel-card">
+                <div class="parcel-header">
+                  <h3 class="parcel-name">{{ parcel.parcelName }}</h3>
+                  <span class="badge badge-info">{{ parcel.landType }}</span>
+                </div>
+                <div class="parcel-details">
+                  <div class="detail-row">
+                    <span class="label">Location:</span>
+                    <span class="val">{{ parcel.location }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="label">Acreage:</span>
+                    <span class="val">{{ parcel.areaInAcres }} Acres</span>
+                  </div>
+                </div>
+                <div class="parcel-actions">
+                  <button class="btn btn-secondary btn-sm" (click)="openEditParcel(parcel)">Edit Parcel</button>
+                </div>
+              </div>
+            } @empty {
+              <div class="glass-panel empty-state">
+                <span class="empty-icon">🗺️</span>
+                <h4>No Land Parcels Registered</h4>
+                <p>Register your first land parcel to begin logging agricultural practices and claiming carbon offsets.</p>
+                <button class="btn btn-primary mt-4" (click)="openAddParcel()">Register Land Parcel</button>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- 3. PRACTICE LOGS VIEW -->
+      @if (activeTab() === 'practice-logs') {
+        <div>
+          <div class="header-action">
+            <div>
+              <h2 class="view-title">Practice Log History</h2>
+              <p class="view-subtitle">View and log environment-friendly practices for verification.</p>
+            </div>
+            <button class="btn btn-primary" (click)="openAddPractice()">+ Log Practice</button>
+          </div>
+
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Land Parcel</th>
+                  <th>Practice</th>
+                  <th>Crop</th>
+                  <th>Season</th>
+                  <th>Quantity</th>
+                  <th>Sowing</th>
+                  <th>Harvesting</th>
+                  <th>Credits</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (log of practiceLogs(); track log.id) {
+                  <tr>
+                    <td>{{ log.landParcel?.parcelName }}</td>
+                    <td>{{ log.practiceType }}</td>
+                    <td>{{ log.cropCategory }}</td>
+                    <td>{{ log.growingSeason }}</td>
+                    <td>{{ log.quantity }}</td>
+                    <td>{{ log.sowingDate }}</td>
+                    <td>{{ log.harvestingDate }}</td>
+                    <td>{{ log.calculatedCredits || '-' }}</td>
+                    <td>
+                      <span class="badge" [class.badge-success]="log.status === 'APPROVED'" [class.badge-warning]="log.status === 'PENDING'" [class.badge-danger]="log.status === 'REJECTED'">
+                        {{ log.status }}
+                      </span>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                      No practice logs submitted. Click "+ Log Practice" to submit your first record.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- 4. WALLET VIEW -->
+      @if (activeTab() === 'wallet') {
+        <div>
+          <h2 class="view-title">Wallet & Bank Payouts</h2>
+          <p class="view-subtitle">View carbon credit sales income and request bank payouts.</p>
+
+          <div class="wallet-layout">
+            <div class="glass-panel wallet-card">
+              <span class="card-chip"></span>
+              <div class="wallet-balance">
+                <span class="label">Total Account Balance</span>
+                <span class="val">₹{{ wallet()?.balance || 0 }}</span>
+              </div>
+              <div class="wallet-footer">
+                <span class="account-num">**** **** {{ apiService.currentUser()?.email?.substring(0, 4) }}</span>
+                <button class="btn btn-accent" (click)="openWithdraw()">Withdraw to Bank</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-container">
+            <h3 class="section-title">Withdrawal Request History</h3>
+            <div class="table-container">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Requested Date</th>
+                    <th>Amount</th>
+                    <th>Bank Details</th>
+                    <th>Admin Comments</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (w of withdrawals(); track w.id) {
+                    <tr>
+                      <td>{{ w.requestedAt ? w.requestedAt.substring(0, 10) : '-' }}</td>
+                      <td>₹{{ w.amount }}</td>
+                      <td>{{ w.bankDetails || 'Default bank' }}</td>
+                      <td>{{ w.adminComments || '-' }}</td>
+                      <td>
+                        <span class="badge" [class.badge-success]="w.status === 'APPROVED'" [class.badge-warning]="w.status === 'PENDING'" [class.badge-danger]="w.status === 'REJECTED'">
+                          {{ w.status }}
+                        </span>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">No payout requests made yet.</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- 5. CARBON ASSETS VIEW -->
+      @if (activeTab() === 'carbon-assets') {
+        <div>
+          <h2 class="view-title">Carbon Assets Directory</h2>
+          <p class="view-subtitle">Monitor computed emissions offsets, formula audit trails, and status registers.</p>
+
+          <!-- Carbon Assets Table Section -->
+          <div class="section-container">
+            <div class="table-container">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Farmer</th>
+                    <th>Practice Log ID</th>
+                    <th>Computed Volume</th>
+                    <th>Formula Configured</th>
+                    <th>Active Cap applied</th>
+                    <th>Creation Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (asset of carbonAssets(); track asset.practiceLogId) {
+                    <tr>
+                      <td>{{ apiService.currentUser()?.email }}</td>
+                      <td>#{{ asset.practiceLogId }}</td>
+                      <td>{{ asset.computedVolume }} t CO2</td>
+                      <td>{{ asset.formulaConfigured }}</td>
+                      <td>
+                        <span class="badge" [class.badge-warning]="asset.activeCapApplied === 'Capped'" [class.badge-secondary]="asset.activeCapApplied === 'Uncapped'">
+                          {{ asset.activeCapApplied }}
+                        </span>
+                      </td>
+                      <td>{{ asset.creationDate ? asset.creationDate.substring(0, 10) : '-' }}</td>
+                      <td>
+                        <span class="badge" 
+                              [class.badge-success]="asset.status === 'VERIFIED' || asset.status === 'LISTED'" 
+                              [class.badge-warning]="asset.status === 'PENDING_VERIFICATION' || asset.status === 'PENDING'" 
+                              [class.badge-danger]="asset.status === 'REJECTED' || asset.status === 'CANCELED'">
+                          {{ asset.status }}
+                        </span>
+                      </td>
+                      <td>
+                        <button class="btn btn-secondary btn-sm" (click)="viewAssetAuditTrail(asset)">
+                          Audit Trail
+                        </button>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                        No carbon assets found. Practice logs must be verified to generate credits.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      }
+    </main>
+  </div>
+
+  <!-- MODALS -->
+
+  <!-- A. Land Parcel Modal -->
+  @if (showParcelModal()) {
+    <div class="modal-overlay">
+      <div class="modal-content">
+        <h3>{{ parcelData.id ? 'Edit Land Parcel' : 'Register Land Parcel' }}</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 20px;">Provide geographical and area specifics for boundary classification.</p>
+        
+        <form (ngSubmit)="saveParcel()">
+          <div class="form-group">
+            <label class="form-label">Parcel Name</label>
+            <input type="text" name="parcelName" class="form-control" [(ngModel)]="parcelData.parcelName" required placeholder="e.g. North Field Wheat">
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Acreage Area (Acres)</label>
+              <input type="number" name="area" class="form-control" [(ngModel)]="parcelData.areaInAcres" required min="0.1" step="0.1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Soil / Land Category</label>
+              <select name="landType" class="form-control select-control" [(ngModel)]="parcelData.landType">
+                <option value="AGRICULTURAL">Agricultural</option>
+                <option value="FOREST">Forest</option>
+                <option value="WASTELAND">Wasteland</option>
+                <option value="IRRIGATED">Irrigated</option>
+                <option value="RAINFED">Rainfed</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Geo Location coordinates</label>
+            <input type="text" name="location" class="form-control" [(ngModel)]="parcelData.location" required placeholder="e.g. Lat: 30.73, Lng: 76.77">
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;">
+            <button type="button" class="btn btn-secondary" (click)="closeParcelModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="isLoading()">Save Parcel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- B. Practice Log Modal -->
+  @if (showPracticeModal()) {
+    <div class="modal-overlay">
+      <div class="modal-content">
+        <h3>Log Agricultural Practice</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 20px;">Submit practice statistics and upload documentation proofs for validation.</p>
+        
+        <form (ngSubmit)="savePracticeLog()">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Land Parcel</label>
+              <select name="parcelId" class="form-control select-control" [(ngModel)]="logData.parcelId">
+                @for (p of parcels(); track p.id) {
+                  <option [value]="p.id">{{ p.parcelName }} ({{ p.areaInAcres }} acres)</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Practice Type</label>
+              <select name="practiceType" class="form-control select-control" [(ngModel)]="logData.practiceType">
+                <option value="TREE_PLANTATION">Tree Plantation</option>
+                <option value="ORGANIC_FARMING">Organic Farming</option>
+                <option value="SOLAR">Solar Energy Setup</option>
+                <option value="WATER_CONSERVATION">Water Conservation</option>
+                <option value="SOIL_MANAGEMENT">Soil Management</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Crop Category</label>
+              <select name="cropCategory" class="form-control select-control" [(ngModel)]="logData.cropCategory">
+                <option value="FOOD">Food Crop</option>
+                <option value="CASH">Cash Crop</option>
+                <option value="PLANTATION">Plantation Crop</option>
+                <option value="HORTICULTURE">Horticulture</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Growing Season</label>
+              <select name="growingSeason" class="form-control select-control" [(ngModel)]="logData.growingSeason">
+                <option value="KHARIF">Kharif</option>
+                <option value="RABI">Rabi</option>
+                <option value="ZAID">Zaid</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Sowing Date</label>
+              <input type="date" name="sowingDate" class="form-control" [(ngModel)]="logData.sowingDate" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Harvesting Date</label>
+              <input type="date" name="harvestingDate" class="form-control" [(ngModel)]="logData.harvestingDate" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Log Metric Quantity (Trees, manure tonnes, solar kWh)</label>
+            <input type="number" name="quantity" class="form-control" [(ngModel)]="logData.quantity" required min="0.1" step="0.1">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Upload Proof Image / Document</label>
+            <input type="file" (change)="onFileSelected($event)" class="form-control" accept="image/*,application/pdf" style="padding: 8px;">
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;">
+            <button type="button" class="btn btn-secondary" (click)="closePracticeModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="isLoading()">Submit Log</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- C. Payout Withdrawal Modal -->
+  @if (showWithdrawModal()) {
+    <div class="modal-overlay">
+      <div class="modal-content">
+        <h3>Request Bank Withdrawal</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 20px;">Transfer earnings directly to your verified banking account.</p>
+        
+        <form (ngSubmit)="requestWithdrawal()">
+          <div class="form-group">
+            <label class="form-label">Withdrawal Amount (₹)</label>
+            <input type="number" name="amount" class="form-control" [(ngModel)]="withdrawData.amount" required min="10" [max]="wallet()?.balance || 0" placeholder="₹ Enter amount">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Bank Account Details (IFSC, Account Number)</label>
+            <textarea name="bankDetails" class="form-control" rows="3" [(ngModel)]="withdrawData.bankDetails" required placeholder="IFSC: HDFC0000123&#10;Account Num: 5010020304050"></textarea>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;">
+            <button type="button" class="btn btn-secondary" (click)="closeWithdrawModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="isLoading() || withdrawData.amount > (wallet()?.balance || 0)">Withdraw Funds</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- D. Audit Trail Modal -->
+  @if (showAuditModal() && selectedAsset()) {
+    <div class="modal-overlay">
+      <div class="modal-content" style="max-width: 650px; background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; color: #fff;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 12px; margin-bottom: 20px;">
+          <h3 style="margin: 0; color: #10B981; display: flex; align-items: center; gap: 8px;">
+            <span>🌿</span> Carbon Credit Audit Trail (Log #{{ selectedAsset().practiceLogId }})
+          </h3>
+          <button (click)="closeAuditModal()" style="background: none; border: none; color: rgba(255,255,255,0.6); font-size: 20px; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='rgba(255,255,255,0.6)'">&times;</button>
+        </div>
+
+        @if (parsedAuditDetails()) {
+          <div style="display: flex; flex-direction: column; gap: 16px; max-height: 450px; overflow-y: auto; padding-right: 8px;">
+            <!-- Formula Version and General Info -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+              <div>
+                <span style="color: rgba(255,255,255,0.5); font-size: 12px; display: block;">Formula Version</span>
+                <strong style="color: #60A5FA;">{{ selectedAsset().formulaConfigured }}</strong>
+              </div>
+              <div>
+                <span style="color: rgba(255,255,255,0.5); font-size: 12px; display: block;">Cap Applied Status</span>
+                <span class="badge" [class.badge-warning]="selectedAsset().activeCapApplied === 'Capped'" [class.badge-secondary]="selectedAsset().activeCapApplied === 'Uncapped'">
+                  {{ selectedAsset().activeCapApplied }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Parameters Grid -->
+            <div>
+              <h4 style="margin: 0 0 8px 0; color: rgba(255,255,255,0.8); font-size: 14px;">Calculation Inputs & Coefficients</h4>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div style="border-left: 3px solid #10B981; padding-left: 8px;">
+                  <span style="color: rgba(255,255,255,0.5); font-size: 12px; display: block;">Base Coefficient</span>
+                  <strong>{{ parsedAuditDetails().baseCoefficient }}</strong>
+                </div>
+                <div style="border-left: 3px solid #10B981; padding-left: 8px;">
+                  <span style="color: rgba(255,255,255,0.5); font-size: 12px; display: block;">Acreage Area</span>
+                  <strong>{{ parsedAuditDetails().landAreaAcres }} Acres</strong>
+                </div>
+                <div style="border-left: 3px solid #3B82F6; padding-left: 8px;">
+                  <span style="color: rgba(255,255,255,0.5); font-size: 12px; display: block;">Log Quantity</span>
+                  <strong>{{ parsedAuditDetails().logQuantity }}</strong>
+                </div>
+                <div style="border-left: 3px solid #3B82F6; padding-left: 8px;">
+                  <span style="color: rgba(255,255,255,0.5); font-size: 12px; display: block;">Growing Season</span>
+                  <strong>{{ parsedAuditDetails().season }} (x{{ parsedAuditDetails().seasonMultiplier }})</strong>
+                </div>
+                <div style="border-left: 3px solid #8B5CF6; padding-left: 8px;">
+                  <span style="color: rgba(255,255,255,0.5); font-size: 12px; display: block;">Crop Category</span>
+                  <strong>{{ parsedAuditDetails().cropCategory }} (x{{ parsedAuditDetails().cropMultiplier }})</strong>
+                </div>
+                <div style="border-left: 3px solid #8B5CF6; padding-left: 8px;">
+                  <span style="color: rgba(255,255,255,0.5); font-size: 12px; display: block;">Duration Factor</span>
+                  <strong>{{ parsedAuditDetails().durationDays }} Days (x{{ parsedAuditDetails().durationFactor }})</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mathematical Audit Result -->
+            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 14px; border-radius: 8px; margin-top: 4px;">
+              <h4 style="margin: 0 0 10px 0; color: #10B981; font-size: 14px;">Emissions Offset Audit Summary</h4>
+              <div style="display: flex; flex-direction: column; gap: 8px; font-family: monospace; font-size: 13px;">
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: rgba(255,255,255,0.7);">Raw Computed Volume:</span>
+                  <strong style="color: #fff;">{{ parsedAuditDetails().rawCalculatedCredits | number:'1.2-2' }} t CO2</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: rgba(255,255,255,0.7);">Maximum Allowable Cap:</span>
+                  <strong style="color: #EF4444;">{{ parsedAuditDetails().calculatedCap | number:'1.2-2' }} t CO2</strong>
+                </div>
+                <hr style="border: 0; border-top: 1px solid rgba(255, 255, 255, 0.15); margin: 6px 0;">
+                <div style="display: flex; justify-content: space-between; font-size: 15px;">
+                  <span style="color: #10B981; font-weight: bold;">Audited Final Volume:</span>
+                  <strong style="color: #10B981; font-weight: bold;">{{ parsedAuditDetails().finalCredits | number:'1.2-2' }} t CO2</strong>
+                </div>
+              </div>
+            </div>
+            
+            @if (parsedAuditDetails().wasCapped) {
+              <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 10px; border-radius: 8px; display: flex; gap: 8px; align-items: center; color: #FCA5A5; font-size: 12px;">
+                <span>⚠️</span>
+                <span><strong>Active Cap Applied:</strong> Raw emissions calculation exceeded the maximum cap limit specified for this practice type.</span>
+              </div>
+            }
+          </div>
+        } @else {
+          <div style="text-align: center; color: rgba(255,255,255,0.5); padding: 40px 0;">
+            <p>No formula details configured or logged for this credit transaction.</p>
+          </div>
+        }
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+          <button (click)="closeAuditModal()" class="btn btn-secondary" style="background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 500; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">Close Audit Trail</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

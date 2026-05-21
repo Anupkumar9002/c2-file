@@ -1,0 +1,648 @@
+<div class="dashboard-wrapper">
+  <!-- Upper navigation navbar -->
+  <nav class="top-nav glass-panel">
+    <div class="logo-area">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+      </svg>
+      <span class="nav-title">Carbon Credits Admin</span>
+    </div>
+    <div class="user-profile">
+      <div class="user-info">
+        <span class="user-name">{{ apiService.currentUser()?.name || 'Administrator' }}</span>
+        <span class="user-role">{{ apiService.currentUser()?.role || 'ADMIN' }}</span>
+      </div>
+      <button class="btn btn-sm btn-outline" (click)="logout()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+        </svg>
+        Sign Out
+      </button>
+    </div>
+  </nav>
+
+  <!-- Sidebar and content layout grid -->
+  <div class="main-layout">
+    <!-- Sidebar navigation -->
+    <aside class="sidebar glass-panel">
+      <div class="nav-menu">
+        <button class="nav-link" [class.active]="activeTab() === 'dashboard'" (click)="activeTab.set('dashboard')">
+          <span class="nav-icon">📊</span> Dashboard
+        </button>
+        <button class="nav-link" [class.active]="activeTab() === 'farmers'" (click)="activeTab.set('farmers')">
+          <span class="nav-icon">🌾</span> Farmers Portal
+        </button>
+        <button class="nav-link" [class.active]="activeTab() === 'companies'" (click)="activeTab.set('companies')">
+          <span class="nav-icon">🏢</span> Companies Portal
+        </button>
+        <button class="nav-link" [class.active]="activeTab() === 'practice-logs'" (click)="activeTab.set('practice-logs')">
+          <span class="nav-icon">📝</span> Practice Logs
+        </button>
+        <button class="nav-link" [class.active]="activeTab() === 'carbon-credits'" (click)="activeTab.set('carbon-credits')">
+          <span class="nav-icon">🌿</span> Carbon Credits
+        </button>
+        <button class="nav-link" [class.active]="activeTab() === 'withdrawals'" (click)="activeTab.set('withdrawals')">
+          <span class="nav-icon">💰</span> Withdrawals
+        </button>
+        <button class="nav-link" [class.active]="activeTab() === 'formulas'" (click)="activeTab.set('formulas')">
+          <span class="nav-icon">🧮</span> Credit Formulas
+        </button>
+        <button class="nav-link" [class.active]="activeTab() === 'audit-logs'" (click)="activeTab.set('audit-logs')">
+          <span class="nav-icon">🛡️</span> Audit Trails
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="content-area">
+      <!-- 1. DASHBOARD VIEW -->
+      @if (activeTab() === 'dashboard') {
+        <section class="animate-fade">
+          <h2 class="view-title">Platform Dashboard</h2>
+          <p class="view-subtitle">Consolidated operational indices across all system registries.</p>
+
+          <div class="kpi-grid">
+            <div class="kpi-card glass-panel green-glow">
+              <div class="kpi-icon">🌾</div>
+              <div class="kpi-details">
+                <span class="kpi-value">{{ kpis()?.totalFarmers || 0 }}</span>
+                <span class="kpi-label">Registered Farmers</span>
+              </div>
+            </div>
+            <div class="kpi-card glass-panel blue-glow">
+              <div class="kpi-icon">🏢</div>
+              <div class="kpi-details">
+                <span class="kpi-value">{{ kpis()?.totalCompanies || 0 }}</span>
+                <span class="kpi-label">Registered Corporate Buyers</span>
+              </div>
+            </div>
+            <div class="kpi-card glass-panel purple-glow">
+              <div class="kpi-icon">🌿</div>
+              <div class="kpi-details">
+                <span class="kpi-value">{{ kpis()?.totalVerifiedCredits || 0 }} t</span>
+                <span class="kpi-label">Verified Credits Issued</span>
+              </div>
+            </div>
+            <div class="kpi-card glass-panel gold-glow">
+              <div class="kpi-icon">💸</div>
+              <div class="kpi-details">
+                <span class="kpi-value">₹{{ kpis()?.totalPlatformFeesEarned || 0 }}</span>
+                <span class="kpi-label">Platform Fees (2.5%)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-details grid-cols-2">
+            <div class="detail-card glass-panel">
+              <h3 class="card-header">Approval Backlogs</h3>
+              <div class="backlog-item">
+                <span>Pending Farmers Verification:</span>
+                <span class="badge" [class.badge-warning]="(kpis()?.pendingFarmers || 0) > 0">{{ kpis()?.pendingFarmers || 0 }}</span>
+              </div>
+              <div class="backlog-item">
+                <span>Pending Companies Verification:</span>
+                <span class="badge" [class.badge-warning]="(kpis()?.pendingCompanies || 0) > 0">{{ kpis()?.pendingCompanies || 0 }}</span>
+              </div>
+              <div class="backlog-item">
+                <span>Pending Practices Audit:</span>
+                <span class="badge" [class.badge-warning]="(kpis()?.pendingPracticeLogs || 0) > 0">{{ kpis()?.pendingPracticeLogs || 0 }}</span>
+              </div>
+              <div class="backlog-item">
+                <span>Pending Withdrawal Approvals:</span>
+                <span class="badge" [class.badge-warning]="(kpis()?.pendingWithdrawals || 0) > 0">{{ kpis()?.pendingWithdrawals || 0 }}</span>
+              </div>
+            </div>
+
+            <div class="detail-card glass-panel">
+              <h3 class="card-header">Marketplace Overview</h3>
+              <div class="backlog-item">
+                <span>Active Marketplace Listings:</span>
+                <span class="val-highlight">{{ kpis()?.activeListings || 0 }}</span>
+              </div>
+              <div class="backlog-item">
+                <span>Completed Transactions:</span>
+                <span class="val-highlight">{{ kpis()?.completedTransactions || 0 }}</span>
+              </div>
+              <div class="backlog-item">
+                <span>Total Transaction Turnover:</span>
+                <span class="val-highlight">₹{{ kpis()?.totalTransactionVolume || 0 }}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      }
+
+      <!-- 2. FARMERS VIEW -->
+      @if (activeTab() === 'farmers') {
+        <section class="animate-fade">
+          <h2 class="view-title">Farmers Directory</h2>
+          <p class="view-subtitle">Verify, review, and onboard agro-producers on the blockchain registry.</p>
+
+          <div class="table-container glass-panel">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Mobile</th>
+                  <th>Aadhaar</th>
+                  <th>Address</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (farmer of farmers(); track farmer.id) {
+                  <tr>
+                    <td><strong>{{ farmer.user.name }}</strong></td>
+                    <td>{{ farmer.user.email }}</td>
+                    <td>{{ farmer.user.mobile }}</td>
+                    <td>{{ farmer.aadhaarNumber }}</td>
+                    <td>{{ farmer.user.address }}</td>
+                    <td>
+                      <span class="status-pill" [class]="farmer.user.status.toLowerCase()">{{ farmer.user.status }}</span>
+                    </td>
+                    <td>
+                      @if (farmer.user.status === 'PENDING') {
+                        <button class="btn btn-xs btn-primary" (click)="openActionModal(farmer, 'farmer')">Verify</button>
+                      } @else {
+                        <span class="text-muted">No actions</span>
+                      }
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="7" class="empty-row">No registered farmers found.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      }
+
+      <!-- 3. COMPANIES VIEW -->
+      @if (activeTab() === 'companies') {
+        <section class="animate-fade">
+          <h2 class="view-title">Corporate Buyer Registry</h2>
+          <p class="view-subtitle">Manage commercial actors and ESG offset buyers.</p>
+
+          <div class="table-container glass-panel">
+            <table>
+              <thead>
+                <tr>
+                  <th>Representative</th>
+                  <th>Company Name</th>
+                  <th>Email</th>
+                  <th>GST Number</th>
+                  <th>PAN Number</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (company of companies(); track company.id) {
+                  <tr>
+                    <td><strong>{{ company.user.name }}</strong></td>
+                    <td>{{ company.companyName }}</td>
+                    <td>{{ company.user.email }}</td>
+                    <td><code>{{ company.gstNumber }}</code></td>
+                    <td><code>{{ company.panNumber }}</code></td>
+                    <td>
+                      <span class="status-pill" [class]="company.user.status.toLowerCase()">{{ company.user.status }}</span>
+                    </td>
+                    <td>
+                      @if (company.user.status === 'PENDING') {
+                        <button class="btn btn-xs btn-primary" (click)="openActionModal(company, 'company')">Verify</button>
+                      } @else {
+                        <span class="text-muted">No actions</span>
+                      }
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="7" class="empty-row">No registered companies found.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      }
+
+      <!-- 4. PRACTICE LOGS VIEW -->
+      @if (activeTab() === 'practice-logs') {
+        <section class="animate-fade">
+          <h2 class="view-title">Agricultural Practice Audits</h2>
+          <p class="view-subtitle">Audit environmental practices logged by farmers before carbon credit calculations.</p>
+
+          <div class="table-container glass-panel">
+            <table>
+              <thead>
+                <tr>
+                  <th>Farmer</th>
+                  <th>Parcel</th>
+                  <th>Practice Type</th>
+                  <th>Crop & Season</th>
+                  <th>Quantity</th>
+                  <th>Sowing / Harvest</th>
+                  <th>Proof</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (log of practiceLogs(); track log.id) {
+                  <tr>
+                    <td><strong>{{ log.farmerName }}</strong></td>
+                    <td>{{ log.parcelName }} ({{ log.parcelArea }} ac)</td>
+                    <td><code>{{ log.practiceType }}</code></td>
+                    <td>{{ log.cropCategory }} / {{ log.growingSeason }}</td>
+                    <td>{{ log.quantity }} units</td>
+                    <td>
+                      <span class="date-tag">{{ log.sowingDate }}</span> to
+                      <span class="date-tag">{{ log.harvestingDate }}</span>
+                    </td>
+                    <td>
+                      @if (log.proofDocumentBase64) {
+                        <a [href]="'data:application/pdf;base64,' + log.proofDocumentBase64" download="proof_log_{{ log.id }}.pdf" class="link-download">
+                          📥 Proof PDF
+                        </a>
+                      } @else {
+                        <span class="text-muted">None</span>
+                      }
+                    </td>
+                    <td>
+                      <span class="status-pill" [class]="log.status.toLowerCase()">{{ log.status }}</span>
+                    </td>
+                    <td>
+                      @if (log.status === 'PENDING') {
+                        <button class="btn btn-xs btn-primary" (click)="openActionModal(log, 'practice-log')">Audit</button>
+                      } @else {
+                        <span class="text-muted">Audited</span>
+                      }
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="9" class="empty-row">No practice logs logged.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      }
+
+      <!-- 5. CARBON CREDITS VIEW -->
+      @if (activeTab() === 'carbon-credits') {
+        <section class="animate-fade">
+          <h2 class="view-title">Carbon Assets Directory</h2>
+          <p class="view-subtitle">Monitor computed emissions offsets, formula audit trails, and status registers.</p>
+
+          <div class="table-container glass-panel">
+            <table>
+              <thead>
+                <tr>
+                  <th>Farmer</th>
+                  <th>Practice Log ID</th>
+                  <th>Computed Volume</th>
+                  <th>Formula Configured</th>
+                  <th>Active Cap applied</th>
+                  <th>Creation Date</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (credit of carbonCredits(); track credit.id) {
+                  <tr>
+                    <td><strong>{{ credit.farmerName }}</strong></td>
+                    <td>#{{ credit.practiceLogId }}</td>
+                    <td><span class="credit-highlight">{{ credit.co2offsetValue }} t CO2</span></td>
+                    <td>{{ credit.practiceType }} (v{{ credit.formulaVersion }})</td>
+                    <td>
+                      @if (credit.capApplied) {
+                        <span class="badge badge-warning" title="{{ credit.capReason }}">Capped: {{ credit.capLimit }} t</span>
+                      } @else {
+                        <span class="text-muted">Uncapped</span>
+                      }
+                    </td>
+                    <td>{{ credit.createdAt | date:'mediumDate' }}</td>
+                    <td>
+                      <span class="status-pill" [class]="credit.status.toLowerCase()">{{ credit.status }}</span>
+                    </td>
+                    <td>
+                      @if (credit.status === 'PENDING') {
+                        <div class="btn-group">
+                          <button class="btn btn-xs btn-success" (click)="openActionModal(credit, 'carbon-credit')">Authorize</button>
+                        </div>
+                      } @else {
+                        <span class="text-muted">Finalized</span>
+                      }
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="8" class="empty-row">No computed carbon credit assets found.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      }
+
+      <!-- 6. WITHDRAWALS VIEW -->
+      @if (activeTab() === 'withdrawals') {
+        <section class="animate-fade">
+          <h2 class="view-title">Bank Payout Operations</h2>
+          <p class="view-subtitle">Review, approve, or reject liquidity cash-out requests submitted by farmers.</p>
+
+          <div class="table-container glass-panel">
+            <table>
+              <thead>
+                <tr>
+                  <th>Farmer</th>
+                  <th>Requested Payout</th>
+                  <th>Bank details</th>
+                  <th>Requested Date</th>
+                  <th>Status</th>
+                  <th>Auditor Comments</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (withdrawal of withdrawals(); track withdrawal.id) {
+                  <tr>
+                    <td><strong>{{ withdrawal.farmerName }}</strong></td>
+                    <td><span class="val-highlight">₹{{ withdrawal.amount }}</span></td>
+                    <td><code>{{ withdrawal.bankDetails || 'N/A' }}</code></td>
+                    <td>{{ withdrawal.createdAt | date:'short' }}</td>
+                    <td>
+                      <span class="status-pill" [class]="withdrawal.status.toLowerCase()">{{ withdrawal.status }}</span>
+                    </td>
+                    <td><span class="comment-text">{{ withdrawal.adminComments || '-' }}</span></td>
+                    <td>
+                      @if (withdrawal.status === 'PENDING') {
+                        <div class="btn-group">
+                          <button class="btn btn-xs btn-success" (click)="openActionModal(withdrawal, 'withdrawal-approve')">Approve</button>
+                          <button class="btn btn-xs btn-danger" (click)="openActionModal(withdrawal, 'withdrawal-reject')">Reject</button>
+                        </div>
+                      } @else {
+                        <span class="text-muted">Done</span>
+                      }
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="7" class="empty-row">No withdrawal requests found.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      }
+
+      <!-- 7. FORMULAS VIEW -->
+      @if (activeTab() === 'formulas') {
+        <section class="animate-fade">
+          <div class="header-action">
+            <div>
+              <h2 class="view-title">Credit Multipliers & Formulas</h2>
+              <p class="view-subtitle">Configure calculations, multipliers, and environmental caps for certified audits.</p>
+            </div>
+            <button class="btn btn-primary" (click)="openFormulaModal()">⚙️ Add Formula Version</button>
+          </div>
+
+          <div class="dashboard-details grid-cols-2">
+            <!-- Active Formulas Overview -->
+            <div class="detail-card glass-panel" style="grid-column: 1 / -1;">
+              <h3 class="card-header">System Active Multipliers</h3>
+              <div class="table-container no-border" style="box-shadow: none; margin-top: 10px;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Practice Category</th>
+                      <th>Base Coeff. (t/unit)</th>
+                      <th>Max Cap Limit (t)</th>
+                      <th>Growing Season Multipliers</th>
+                      <th>Crop Multipliers</th>
+                      <th>Version</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>TREE_PLANTATION</strong></td>
+                      <td>1.5</td>
+                      <td>100.0</td>
+                      <td>Kharif: 1.0 | Rabi: 1.2 | Zaid: 0.8</td>
+                      <td>Food: 1.0 | Cash: 1.5 | Hort: 1.8 | Plant: 2.0</td>
+                      <td>v1.0</td>
+                      <td><span class="status-pill approved">ACTIVE</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>ORGANIC_FARMING</strong></td>
+                      <td>0.8</td>
+                      <td>40.0</td>
+                      <td>Kharif: 1.0 | Rabi: 1.1 | Zaid: 0.9</td>
+                      <td>Food: 1.2 | Cash: 1.0 | Hort: 1.4 | Plant: 1.6</td>
+                      <td>v1.0</td>
+                      <td><span class="status-pill approved">ACTIVE</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>SOLAR</strong></td>
+                      <td>2.5</td>
+                      <td>250.0</td>
+                      <td>Kharif: 1.0 | Rabi: 1.0 | Zaid: 1.0</td>
+                      <td>Food: 1.0 | Cash: 1.0 | Hort: 1.0 | Plant: 1.0</td>
+                      <td>v1.0</td>
+                      <td><span class="status-pill approved">ACTIVE</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>WATER_CONSERVATION</strong></td>
+                      <td>1.2</td>
+                      <td>60.0</td>
+                      <td>Kharif: 1.3 | Rabi: 1.0 | Zaid: 0.7</td>
+                      <td>Food: 1.1 | Cash: 1.2 | Hort: 1.3 | Plant: 1.5</td>
+                      <td>v1.0</td>
+                      <td><span class="status-pill approved">ACTIVE</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>SOIL_MANAGEMENT</strong></td>
+                      <td>0.5</td>
+                      <td>30.0</td>
+                      <td>Kharif: 1.0 | Rabi: 1.0 | Zaid: 1.0</td>
+                      <td>Food: 1.0 | Cash: 1.0 | Hort: 1.2 | Plant: 1.4</td>
+                      <td>v1.0</td>
+                      <td><span class="status-pill approved">ACTIVE</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+      }
+
+      <!-- 8. AUDIT LOGS VIEW -->
+      @if (activeTab() === 'audit-logs') {
+        <section class="animate-fade">
+          <h2 class="view-title">Security & Audit Trails</h2>
+          <p class="view-subtitle">Stateless tracking log of platform states, profile approvals, and operations.</p>
+
+          <div class="table-container glass-panel">
+            <table>
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Actor</th>
+                  <th>Action</th>
+                  <th>Entity Type</th>
+                  <th>Reference ID</th>
+                  <th>Message & Verification Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (log of auditLogs(); track log.id) {
+                  <tr>
+                    <td><code>{{ log.timestamp | date:'medium' }}</code></td>
+                    <td><strong>{{ log.performedByEmail }}</strong> <span class="badge">{{ log.performedByRole }}</span></td>
+                    <td><span class="val-highlight">{{ log.action }}</span></td>
+                    <td><code>{{ log.targetType }}</code></td>
+                    <td>#{{ log.targetId }}</td>
+                    <td><span class="message-text">{{ log.details }}</span></td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="6" class="empty-row">No security audits logged.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      }
+    </main>
+  </div>
+</div>
+
+<!-- ================= MODAL DIALOGS ================= -->
+
+<!-- 1. APPROVALS / ACTION MODAL -->
+@if (showActionModal()) {
+  <div class="modal-backdrop">
+    <div class="modal-content glass-panel animate-scale">
+      <h3 class="modal-title">
+        @if (actionType() === 'farmer') { Verify Farmer Profile }
+        @else if (actionType() === 'company') { Verify Corporate Profile }
+        @else if (actionType() === 'practice-log') { Audit Practice Log }
+        @else if (actionType() === 'carbon-credit') { Authorize Carbon Asset }
+        @else if (actionType() === 'withdrawal-approve') { Approve Bank Payout }
+        @else if (actionType() === 'withdrawal-reject') { Reject Bank Payout }
+      </h3>
+      
+      <div class="modal-body">
+        <!-- Item context -->
+        <div class="item-summary glass-panel">
+          @if (actionType() === 'farmer') {
+            <div>Name: <strong>{{ selectedItem()?.user?.name }}</strong></div>
+            <div>Aadhaar: {{ selectedItem()?.aadhaarNumber }}</div>
+            <div>Address: {{ selectedItem()?.user?.address }}</div>
+          }
+          @if (actionType() === 'company') {
+            <div>Company: <strong>{{ selectedItem()?.companyName }}</strong></div>
+            <div>GST: {{ selectedItem()?.gstNumber }}</div>
+            <div>Representative: {{ selectedItem()?.user?.name }}</div>
+          }
+          @if (actionType() === 'practice-log') {
+            <div>Farmer: <strong>{{ selectedItem()?.farmerName }}</strong></div>
+            <div>Practice: {{ selectedItem()?.practiceType }}</div>
+            <div>Quantity: {{ selectedItem()?.quantity }} units</div>
+          }
+          @if (actionType() === 'carbon-credit') {
+            <div>Farmer: <strong>{{ selectedItem()?.farmerName }}</strong></div>
+            <div>Practice Type: {{ selectedItem()?.practiceType }}</div>
+            <div>Computed Volume: <strong>{{ selectedItem()?.co2offsetValue }} t CO2</strong></div>
+          }
+          @if (actionType() === 'withdrawal-approve' || actionType() === 'withdrawal-reject') {
+            <div>Farmer: <strong>{{ selectedItem()?.farmerName }}</strong></div>
+            <div>Requested Amount: <strong>₹{{ selectedItem()?.amount }}</strong></div>
+            <div>Bank Details: <code>{{ selectedItem()?.bankDetails }}</code></div>
+          }
+        </div>
+
+        <!-- Inputs -->
+        @if (actionType() !== 'withdrawal-approve' && actionType() !== 'withdrawal-reject') {
+          <div class="form-group">
+            <label>Deciding Status</label>
+            <select class="form-control" [(ngModel)]="actionStatus">
+              <option value="APPROVED">APPROVE & ONBOARD</option>
+              <option value="REJECTED">REJECT / RETURN</option>
+              @if (actionType() === 'carbon-credit') {
+                <option value="CANCELED">CANCEL ASSET</option>
+              }
+            </select>
+          </div>
+        }
+
+        <div class="form-group">
+          <label>Comments / Decision Audit Log</label>
+          <textarea class="form-control" rows="4" placeholder="Input details explaining this authorization decision..." [(ngModel)]="actionComments"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="closeActionModal()" [disabled]="isLoading()">Cancel</button>
+        <button class="btn btn-primary" (click)="submitAction()" [disabled]="isLoading()">
+          @if (isLoading()) { Executing... } @else { Save Decision }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- 2. FORMULA CONFIGURATION MODAL -->
+@if (showFormulaModal()) {
+  <div class="modal-backdrop">
+    <div class="modal-content glass-panel animate-scale">
+      <h3 class="modal-title">Configure Credit Formula</h3>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Practice Category</label>
+          <select class="form-control" [(ngModel)]="formulaData.practiceType">
+            <option value="TREE_PLANTATION">TREE_PLANTATION</option>
+            <option value="ORGANIC_FARMING">ORGANIC_FARMING</option>
+            <option value="SOLAR">SOLAR</option>
+            <option value="WATER_CONSERVATION">WATER_CONSERVATION</option>
+            <option value="SOIL_MANAGEMENT">SOIL_MANAGEMENT</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Base Coefficient (Tonnes/Unit)</label>
+          <input type="number" step="0.1" class="form-control" [(ngModel)]="formulaData.baseCoefficient">
+        </div>
+
+        <div class="form-group">
+          <label>Max Environmental Cap (Tonnes)</label>
+          <input type="number" step="1.0" class="form-control" [(ngModel)]="formulaData.maxCap">
+        </div>
+
+        <div class="form-group">
+          <label>Formula Version ID</label>
+          <input type="text" class="form-control" placeholder="e.g. 1.1" [(ngModel)]="formulaData.version">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="closeFormulaModal()" [disabled]="isLoading()">Cancel</button>
+        <button class="btn btn-primary" (click)="submitFormula()" [disabled]="isLoading()">
+          @if (isLoading()) { Configuring... } @else { Set Formula Active }
+        </button>
+      </div>
+    </div>
+  </div>
+}
