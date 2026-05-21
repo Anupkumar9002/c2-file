@@ -342,12 +342,32 @@ export class ApiService {
     });
   }
 
-  verifyCarbonCredit(creditId: number, status: 'APPROVED' | 'REJECTED' | 'CANCELED', comments: string): Observable<any> {
-    const params = new HttpParams()
+  verifyCarbonCredit(creditId: number, status: 'VERIFIED' | 'REJECTED', comments: string, pricePerCredit?: number, quantity?: number): Observable<any> {
+    let params = new HttpParams()
       .set('creditId', creditId.toString())
       .set('status', status)
       .set('comments', comments);
+    if (pricePerCredit !== undefined && pricePerCredit !== null) {
+      params = params.set('pricePerCredit', pricePerCredit.toString());
+    }
+    if (quantity !== undefined && quantity !== null) {
+      params = params.set('quantity', quantity.toString());
+    }
     return this.http.post(`${this.baseUrl}/api/v1/admin/verify/carbon-credit`, null, {
+      headers: this.getHeaders(),
+      params
+    });
+  }
+
+  listVerifiedCredit(creditId: number, pricePerCredit: number, quantity: number, validUntil?: string): Observable<any> {
+    let params = new HttpParams()
+      .set('creditId', creditId.toString())
+      .set('pricePerCredit', pricePerCredit.toString())
+      .set('quantity', quantity.toString());
+    if (validUntil) {
+      params = params.set('validUntil', validUntil);
+    }
+    return this.http.post(`${this.baseUrl}/api/v1/admin/marketplace/list`, null, {
       headers: this.getHeaders(),
       params
     });

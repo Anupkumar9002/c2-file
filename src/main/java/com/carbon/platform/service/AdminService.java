@@ -145,6 +145,11 @@ public class AdminService {
 
     @Transactional
     public void verifyCarbonCredit(Long creditId, CreditStatus status, String comments) {
+        verifyCarbonCredit(creditId, status, comments, null, null);
+    }
+
+    @Transactional
+    public void verifyCarbonCredit(Long creditId, CreditStatus status, String comments, Double pricePerCredit, Double quantity) {
         if (comments == null || comments.trim().isEmpty()) {
             throw new InvalidActionException("Admin comments are mandatory for both approval and rejection actions.");
         }
@@ -161,22 +166,28 @@ public class AdminService {
         }
         carbonCreditRepository.save(credit);
 
-        // Automatically create a marketplace listing for the verified credit
-        // Use the farmer's email, the credit ID, quantity as the final credits, price set to a default of 10.0,
-        // and let the service use its default validUntil.
-        try {
-            marketplaceService.createListing(
-                credit.getFarmer().getUser().getEmail(),
-                credit.getId(),
-                credit.getFinalCredits(),
-                10.0,
-                null
-            );
-        } catch (Exception e) {
-            // Log and continue; marketplace listing is optional and should not block credit verification
-            // Assuming a logger is available; otherwise ignore.
+        if (status == CreditStatus.VERIFIED && pricePerCredit != null && pricePerCredit > 0) {
+            // Automatically create a marketplace listing for the verified credit
+            try {
+                double finalQty = (quantity != null && quantity > 0) ? quantity : credit.getFinalCredits();
+                marketplaceService.createListing(
+                    credit.getFarmer().getUser().getEmail(),
+                    credit.getId(),
+                    finalQty,
+                    pricePerCredit,
+                    null
+                );
+            } catch (Exception e) {
+                // Log and continue; marketplace listing is optional and should not block credit verification
+            }
         }
     }
+
+    @Transactional
+    public void listVerifiedCredit(Long creditId, Double pricePerCredit, Double quantity, java.time.LocalDate validUntil) {
+        marketplaceService.createListingForVerifiedCredit(creditId, pricePerCredit, quantity, validUntil);
+    }
+
 
     @Transactional
     public void configureFormula(PracticeType type, Double baseCoefficient, Double maxCap, String version) {

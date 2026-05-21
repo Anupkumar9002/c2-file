@@ -144,4 +144,16 @@ public class MarketplaceService {
         List<Long> listingIds = favourites.getOrDefault(email, new ArrayList<>());
         return listingRepository.findAllById(listingIds);
     }
+
+    @Transactional
+    public Listing createListingForVerifiedCredit(Long creditId, Double pricePerCredit, Double quantity, LocalDate validUntil) {
+        CarbonCredit credit = carbonCreditRepository.findById(creditId)
+                .orElseThrow(() -> new EntityNotFoundException("Carbon credit not found with ID: " + creditId));
+        if (credit.getStatus() != CreditStatus.VERIFIED) {
+            throw new InvalidActionException("Only VERIFIED carbon credits can be listed on the marketplace.");
+        }
+        String farmerEmail = credit.getFarmer().getUser().getEmail();
+        return createListing(farmerEmail, creditId, quantity, pricePerCredit, validUntil);
+    }
 }
+

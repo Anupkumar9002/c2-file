@@ -35,11 +35,14 @@ export class AdminComponent implements OnInit {
   // Selection states for actions (for modals/dialogs)
   selectedItem = signal<any>(null);
   showActionModal = signal(false);
-  actionType = signal<'farmer' | 'company' | 'practice-log' | 'carbon-credit' | 'withdrawal-approve' | 'withdrawal-reject'>('farmer');
+  actionType = signal<'farmer' | 'company' | 'practice-log' | 'carbon-credit' | 'withdrawal-approve' | 'withdrawal-reject' | 'list-marketplace'>('farmer');
   
   // Action details
   actionComments = '';
-  actionStatus: 'APPROVED' | 'REJECTED' | 'CANCELED' = 'APPROVED';
+  actionStatus: 'APPROVED' | 'REJECTED' | 'CANCELED' | 'VERIFIED' = 'APPROVED';
+  pricePerCredit = 10.0;
+  quantity = 0;
+  validUntil = '';
 
   // Credit formula forms controls
   showFormulaModal = signal(false);
@@ -125,7 +128,12 @@ export class AdminComponent implements OnInit {
     this.selectedItem.set(item);
     this.actionType.set(type);
     this.actionComments = '';
-    this.actionStatus = 'APPROVED';
+    this.actionStatus = type === 'carbon-credit' ? 'VERIFIED' : 'APPROVED';
+    if (type === 'carbon-credit' || type === 'list-marketplace') {
+      this.pricePerCredit = 10.0;
+      this.quantity = item.co2offsetValue || item.finalCredits || 0;
+      this.validUntil = '';
+    }
     this.showActionModal.set(true);
   }
 
@@ -152,7 +160,21 @@ export class AdminComponent implements OnInit {
         apiCall = this.apiService.verifyPracticeLog(id, this.actionStatus as 'APPROVED' | 'REJECTED', this.actionComments);
         break;
       case 'carbon-credit':
-        apiCall = this.apiService.verifyCarbonCredit(id, this.actionStatus, this.actionComments);
+        apiCall = this.apiService.verifyCarbonCredit(
+          id,
+          this.actionStatus as 'VERIFIED' | 'REJECTED',
+          this.actionComments,
+          this.actionStatus === 'VERIFIED' ? this.pricePerCredit : undefined,
+          this.actionStatus === 'VERIFIED' ? this.quantity : undefined
+        );
+        break;
+      case 'list-marketplace':
+        apiCall = this.apiService.listVerifiedCredit(
+          id,
+          this.pricePerCredit,
+          this.quantity,
+          this.validUntil ? this.validUntil : undefined
+        );
         break;
       case 'withdrawal-approve':
         apiCall = this.apiService.approveWithdrawal(id, this.actionComments);

@@ -77,10 +77,23 @@ public class AdminController {
     public ResponseEntity<ApiResponse<String>> verifyCarbonCredit(
             @RequestParam Long creditId,
             @RequestParam CreditStatus status,
-            @RequestParam String comments) {
+            @RequestParam String comments,
+            @RequestParam(required = false) Double pricePerCredit,
+            @RequestParam(required = false) Double quantity) {
 
-        adminService.verifyCarbonCredit(creditId, status, comments);
+        adminService.verifyCarbonCredit(creditId, status, comments, pricePerCredit, quantity);
         return ResponseEntity.ok(new ApiResponse<>(true, "Carbon credit verification completed. Status: " + status));
+    }
+
+    @PostMapping("/marketplace/list")
+    public ResponseEntity<ApiResponse<String>> listVerifiedCredit(
+            @RequestParam Long creditId,
+            @RequestParam Double pricePerCredit,
+            @RequestParam Double quantity,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate validUntil) {
+
+        adminService.listVerifiedCredit(creditId, pricePerCredit, quantity, validUntil);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Carbon credit successfully listed on marketplace."));
     }
 
     @GetMapping("/farmers")

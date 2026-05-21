@@ -333,12 +333,16 @@
                       <span class="status-pill" [class]="credit.status.toLowerCase()">{{ credit.status }}</span>
                     </td>
                     <td>
-                      @if (credit.status === 'PENDING') {
+                      @if (credit.status === 'PENDING_VERIFICATION' || credit.status === 'PENDING') {
                         <div class="btn-group">
                           <button class="btn btn-xs btn-success" (click)="openActionModal(credit, 'carbon-credit')">Authorize</button>
                         </div>
+                      } @else if (credit.status === 'VERIFIED') {
+                        <div class="btn-group">
+                          <button class="btn btn-xs btn-primary" (click)="openActionModal(credit, 'list-marketplace')">List on Marketplace</button>
+                        </div>
                       } @else {
-                        <span class="text-muted">Finalized</span>
+                        <span class="text-muted">Finalized ({{ credit.status }})</span>
                       }
                     </td>
                   </tr>
@@ -542,6 +546,7 @@
         @else if (actionType() === 'carbon-credit') { Authorize Carbon Asset }
         @else if (actionType() === 'withdrawal-approve') { Approve Bank Payout }
         @else if (actionType() === 'withdrawal-reject') { Reject Bank Payout }
+        @else if (actionType() === 'list-marketplace') { List Carbon Credit on Marketplace }
       </h3>
       
       <div class="modal-body">
@@ -562,10 +567,10 @@
             <div>Practice: {{ selectedItem()?.practiceType }}</div>
             <div>Quantity: {{ selectedItem()?.quantity }} units</div>
           }
-          @if (actionType() === 'carbon-credit') {
+          @if (actionType() === 'carbon-credit' || actionType() === 'list-marketplace') {
             <div>Farmer: <strong>{{ selectedItem()?.farmerName }}</strong></div>
             <div>Practice Type: {{ selectedItem()?.practiceType }}</div>
-            <div>Computed Volume: <strong>{{ selectedItem()?.co2offsetValue }} t CO2</strong></div>
+            <div>Computed Volume: <strong>{{ selectedItem()?.co2offsetValue || selectedItem()?.finalCredits }} t CO2</strong></div>
           }
           @if (actionType() === 'withdrawal-approve' || actionType() === 'withdrawal-reject') {
             <div>Farmer: <strong>{{ selectedItem()?.farmerName }}</strong></div>
@@ -575,23 +580,45 @@
         </div>
 
         <!-- Inputs -->
-        @if (actionType() !== 'withdrawal-approve' && actionType() !== 'withdrawal-reject') {
+        @if (actionType() !== 'withdrawal-approve' && actionType() !== 'withdrawal-reject' && actionType() !== 'list-marketplace') {
           <div class="form-group">
             <label>Deciding Status</label>
             <select class="form-control" [(ngModel)]="actionStatus">
-              <option value="APPROVED">APPROVE & ONBOARD</option>
-              <option value="REJECTED">REJECT / RETURN</option>
               @if (actionType() === 'carbon-credit') {
-                <option value="CANCELED">CANCEL ASSET</option>
+                <option value="VERIFIED">VERIFY & ISSUE</option>
+                <option value="REJECTED">REJECT</option>
+              } @else {
+                <option value="APPROVED">APPROVE & ONBOARD</option>
+                <option value="REJECTED">REJECT / RETURN</option>
               }
             </select>
           </div>
         }
 
-        <div class="form-group">
-          <label>Comments / Decision Audit Log</label>
-          <textarea class="form-control" rows="4" placeholder="Input details explaining this authorization decision..." [(ngModel)]="actionComments"></textarea>
-        </div>
+        <!-- Pricing and Quantity Inputs for listing -->
+        @if ((actionType() === 'carbon-credit' && actionStatus === 'VERIFIED') || actionType() === 'list-marketplace') {
+          <div class="form-group animate-fade">
+            <label>Price Per Credit (₹)</label>
+            <input type="number" class="form-control" step="0.01" min="0.01" [(ngModel)]="pricePerCredit" name="pricePerCredit">
+          </div>
+          <div class="form-group animate-fade">
+            <label>Quantity to List (t CO2)</label>
+            <input type="number" class="form-control" step="0.01" min="0.01" [max]="selectedItem()?.co2offsetValue || selectedItem()?.finalCredits" [(ngModel)]="quantity" name="quantity">
+          </div>
+        }
+        @if (actionType() === 'list-marketplace') {
+          <div class="form-group animate-fade">
+            <label>Valid Until (Expiration Date)</label>
+            <input type="date" class="form-control" [(ngModel)]="validUntil" name="validUntil">
+          </div>
+        }
+
+        @if (actionType() !== 'list-marketplace') {
+          <div class="form-group">
+            <label>Comments / Decision Audit Log</label>
+            <textarea class="form-control" rows="4" placeholder="Input details explaining this authorization decision..." [(ngModel)]="actionComments"></textarea>
+          </div>
+        }
       </div>
 
       <div class="modal-footer">
