@@ -1,5 +1,6 @@
 package com.carbon.platform.controller;
 
+import com.carbon.platform.dto.response.FarmerDashboardResponse;
 import com.carbon.platform.dto.response.ApiResponse;
 import com.carbon.platform.dto.CarbonAssetDto;
 import com.carbon.platform.service.CarbonAssetService;
@@ -142,4 +143,10 @@ public class FarmerController {
         List<CarbonAssetDto> assets = carbonAssetService.getCarbonAssets(principal.getName());
         return ResponseEntity.ok(new ApiResponse<>(true, "Retrieved carbon assets.", assets));
     }
-}
+    @GetMapping("/dashboard")
+    public ResponseEntity<ApiResponse<FarmerDashboardResponse>> getDashboard(Principal principal) {
+        FarmerDashboardResponse resp = dashboardService.getFarmerDashboard(principal.getName());
+        return ResponseEntity.ok(new ApiResponse<>(true, "Retrieved farmer dashboard.", resp));
+    }
+
+    }

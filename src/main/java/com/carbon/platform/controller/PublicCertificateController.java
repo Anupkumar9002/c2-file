@@ -25,20 +25,5 @@ public class PublicCertificateController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Certificate verification details retrieved.", certificate));
     }
 
-    @GetMapping("/{certificateId}/pdf")
-    public ResponseEntity<byte[]> downloadCertificatePdf(@PathVariable String certificateId) {
-        Certificate certificate = certificateService.getCertificateByCode(certificateId);
-        byte[] pdfBytes = certificate.getPdfData();
-
-        if (pdfBytes == null || pdfBytes.length == 0) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDispositionFormData("inline", "certificate_" + certificateId + ".pdf");
-        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-
-        return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
-    }
+    
 }
